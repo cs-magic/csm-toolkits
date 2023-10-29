@@ -1,6 +1,11 @@
 import { HTMLAttributes, PropsWithChildren } from "react"
 import { clsx } from "clsx"
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Assets } from "@/components/assets"
 
 export const CardOuter = ({
@@ -14,7 +19,7 @@ export const CardOuter = ({
   required?: boolean
 } & HTMLAttributes<HTMLDivElement>) => {
   return (
-    <div className={clsx("flex flex-col", className)} {...props}>
+    <div className={clsx("flex flex-col gap-1", className)} {...props}>
       <div className={"flex"}>
         <div className={"text-black font-medium"}>{title}</div>
 
@@ -41,7 +46,13 @@ export const CardInner = ({
       }
     >
       <div className={"flex items-center gap-2"}>
-        {title} <Assets.question />
+        {title}
+        <Popover>
+          <PopoverTrigger>
+            <Assets.question />
+          </PopoverTrigger>
+          <PopoverContent>How ?</PopoverContent>
+        </Popover>
       </div>
       <div className={clsx("grow", className)} {...props}>
         {children}
