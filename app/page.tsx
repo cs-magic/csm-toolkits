@@ -1,17 +1,7 @@
 "use client"
 
-import { ContentSection } from "@/app/sections/content"
-import { NavSection } from "@/app/sections/nav"
-import { TopSection } from "@/app/sections/top"
+import { ColorPalette } from "@/app/sections/color-palette"
 
 export default function IndexPage() {
-  return (
-    <section className={"w-full flex flex-col"}>
-      <NavSection />
-
-      <TopSection />
-
-      <ContentSection />
-    </section>
-  )
+  return <ColorPalette />
 }
