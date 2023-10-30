@@ -1,9 +1,12 @@
-import { ReactNode, useState } from "react"
-import { loadWebpackHook } from "next/dist/server/config-utils"
+"use client"
+
+import { useRef } from "react"
 import { CopyIcon } from "lucide-react"
-import { set } from "yaml/dist/schema/yaml-1.1/set"
 
 import { Input } from "@/components/ui/input"
+import { useColor } from "@/app/hooks/use-app-store"
+
+export const COLOR_N = 256
 
 export const LabelLine = ({
   title,
@@ -12,14 +15,19 @@ export const LabelLine = ({
   title: string
   value: string
 }) => {
+  const { setColor } = useColor()
+  const hexRef = useRef(value)
+
   return (
     <div className={"flex flex-col gap-2"}>
       <div>{title}</div>
       <div className={"border-b flex justify-between items-center gap-2"}>
         <Input
-          value={value}
+          defaultValue={value}
           onChange={(event) => {
-            console.log({ event })
+            const hex = event.currentTarget.value
+            const value = hex2value(hex)
+            if (value !== undefined) setColor(value)
           }}
           className={
             "border-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
@@ -31,18 +39,41 @@ export const LabelLine = ({
   )
 }
 
-const getHex = (value: number) => {
-  const b = value % 255
-  value = Math.floor(value / 255)
-  const g = value % 255
-  value = Math.floor(value / 255)
-  const r = value
-  const rgb =
-    r.toString(16).padStart(2, "0") +
-    g.toString(16).padStart(2, "0") +
-    b.toString(16).padStart(2, "0")
-  console.log({ r, g, b, rgb })
+const singleValue2hex = (value: number) => value.toString(16).padStart(2, "0")
+const singleHex2value = (hex: string) => {
+  const value = parseInt(hex, 16)
+  console.log({ hex, value })
+  return value
+}
+
+const value2hex = (value: number) => {
+  let curValue = value
+  const b = curValue % COLOR_N
+  curValue = Math.floor(curValue / COLOR_N)
+  const g = curValue % COLOR_N
+  curValue = Math.floor(curValue / COLOR_N)
+  const r = curValue
+  const rgb = singleValue2hex(r) + singleValue2hex(g) + singleValue2hex(b)
+  console.log("-- value2hex: ", { value, r, g, b, rgb })
   return "#" + rgb
+}
+
+const hex2value = (hex: string) => {
+  const m = hex.toLowerCase().match(/[0-9A-Fa-f]+/)
+  if (m && m.length) {
+    let s = m[0]!
+    console.log({ s })
+    if (s.length === 3) s = s[0] + s[0] + s[1] + s[1] + s[2] + s[2]
+    if (s.length === 6) {
+      const ans =
+        singleHex2value(s.slice(0, 2)) * COLOR_N * COLOR_N +
+        singleHex2value(s.slice(2, 4)) * COLOR_N +
+        singleHex2value(s.slice(4))
+      console.log("-- hex2value: ", { s, ans })
+      return ans
+    }
+  }
+  return undefined
 }
 
 export const HexLine = ({ hex }: { hex: string }) => {
@@ -50,24 +81,25 @@ export const HexLine = ({ hex }: { hex: string }) => {
 }
 
 export const ColorPalette = () => {
-  const [colorBG, setColorBG] = useState(1e6)
-  const N = 256 ** 3
-  const colorFG = (colorBG + (N >> 1)) % N
-  const hexBG = getHex(colorBG)
-  const hexFG = getHex(colorFG)
-  console.log({ colorBG, colorFG, hexBG, hexFG })
+  const { color } = useColor()
+  const hex = value2hex(color)
+
+  const N = COLOR_N ** 3 + COLOR_N ** 2 + COLOR_N
+  const colorFG = (color + (N >> 1)) % N
+  const hexFG = value2hex(colorFG)
+  console.log({ N, color, hex, colorFG, hexFG })
 
   return (
     <div
       id={"color-palette"}
       className={"w-screen h-screen flex justify-center items-center"}
       style={{
-        backgroundColor: hexBG,
+        backgroundColor: hex,
         color: hexFG,
       }}
     >
       <div className={"max-w-2xl"}>
-        <HexLine hex={hexBG} />
+        <HexLine hex={hex} />
       </div>
     </div>
   )
